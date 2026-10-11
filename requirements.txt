@@ -19,3 +19,5 @@ pypdf
 
 # Environment variables
 python-dotenv
+
+tiktoken
