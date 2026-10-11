@@ -12,7 +12,6 @@ import os
 load_dotenv(override=True)
 
 model_name = os.getenv("ENCODING_MODEL", "gpt-4.1-nano")
-vectorstore = ""
 
 def load_document(folder_name = "docs", encoding="utf-8"):
     """
@@ -27,10 +26,10 @@ def load_document(folder_name = "docs", encoding="utf-8"):
     docs = []
     for path in Path(folder_name).rglob("*.pdf"):
         reader = PdfReader(path)
-        for i, page in enumerate(reader.pages, start=1):
+        for i, page in enumerate(reader.pages):
             text = page.extract_text()
             if text and text.strip():  # Check if text is not None and not empty
-                docs.append(Document(page_content=page.extract_text(), metadata={"source": str(path.name), "page": i + 1}))
+                docs.append(Document(page_content=text, metadata={"source": str(path.name), "page": i + 1}))
 
     return docs
 
@@ -91,27 +90,11 @@ def embed_documents(documents, embedding_model = os.getenv("EMBEDDING_MODEL", "a
     print(f"There are {count:,} vectors with {dimensions:,} dimensions in the vector store")
     print(f"Embedded {len(documents)} documents and stored in Chroma database '{db_name}'.")
 
-def test_retrieval(query, embedding_model = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"), db_name = os.getenv("CHROMA_DB_NAME", "chroma_db")):
-    """
-    Test retrieval of documents based on a query.
+if __name__ == "__main__":
+    documents = load_document()
+    print(f"Loaded {len(documents)} pages")
 
-    Args:
-        query (str): The query string to search for relevant documents.
-        embedding_model (str): The embedding model to use for generating embeddings.
-        db_name (str): The name of the Chroma database to use.
-    Returns:
-        list: A list of retrieved Document objects.
-    """
-    # embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
-    embeddings = OpenAIEmbeddings(model=embedding_model)
-    vectorstore = Chroma(persist_directory=db_name, embedding_function=embeddings)
+    chunks = split_document(documents)
+    print(f"Split into {len(chunks)} chunks")
 
-    results = vectorstore.similarity_search_with_score(query, k=4)
-    for doc, score in results:
-        print(f"[{score:.3f}] {doc.metadata.get('source')} p.{doc.metadata.get('page')}")
-        print(doc.page_content[:200], "\n")
-
-    return results
-
-
-
+    embed_documents(chunks)
