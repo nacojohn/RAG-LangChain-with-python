@@ -5,6 +5,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import OpenAIEmbeddings
+import gradio as gr
 
 
 load_dotenv(override=True)
@@ -72,9 +73,14 @@ def ask(question, k=4):
     return answer.text
 
 if __name__ == "__main__":
-    while True:
-        user_input = input("Enter your question (or 'exit' to quit): ")
-        if user_input.lower() == 'exit':
-            break
-        answer = ask(user_input)
-        print(f"Answer: {answer}\n")
+    gr.Interface(fn=ask,
+             inputs=[gr.Textbox(label="Enter your question")],
+             outputs=[gr.Textbox(label="Answer")],
+             title="AI Assistant",
+             description="Ask questions based on the ingested documents.").launch()
+    # while True:
+    #     user_input = input("Enter your question (or 'exit' to quit): ")
+    #     if user_input.lower() == 'exit':
+    #         break
+    #     answer = ask(user_input)
+    #     print(f"Answer: {answer}\n")
